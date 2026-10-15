@@ -11,6 +11,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <!-- Google Analytics 4 (GA4) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8VRC9J80PP"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-8VRC9J80PP', {
+          'anonymize_ip': true,
+          'page_title': 'שירותבוט - דף נחיתה ומאגר חקיקה'
+      });
+    </script>
+    
     <!-- Tailwind CSS (via CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -250,17 +262,50 @@
         function copyAndPrompt(encodedQuestion) {
             const question = decodeURIComponent(encodedQuestion);
             navigator.clipboard.writeText(question).then(() => {
+                if (typeof gtag === 'function') {
+                    gtag('event', 'copy_faq_question', {
+                        'event_category': 'engagement',
+                        'event_label': question
+                    });
+                }
                 alert(`השאלה הועתקה ללוח:\n"${question}"\n\nפתח/י את המחברת והדבק/י בצ'אט!`);
             });
         }
 
-        // Instant Client-Side Search
+        // GA4 Track NotebookLM CTA Click
+        const btnNotebook = document.getElementById('btn-open-notebook');
+        if (btnNotebook) {
+            btnNotebook.addEventListener('click', () => {
+                if (typeof gtag === 'function') {
+                    gtag('event', 'open_notebooklm', {
+                        'event_category': 'conversion',
+                        'event_label': 'hero_cta_button'
+                    });
+                }
+            });
+        }
+
+        // Instant Client-Side Search with GA4 Tracking
         const searchInput = document.getElementById('search-input');
         const searchResults = document.getElementById('search-results');
+        let searchGaTimeout = null;
 
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 const q = e.target.value.trim().toLowerCase();
+
+                // Track search in GA4 with 1s debounce
+                clearTimeout(searchGaTimeout);
+                if (q.length >= 3) {
+                    searchGaTimeout = setTimeout(() => {
+                        if (typeof gtag === 'function') {
+                            gtag('event', 'search', {
+                                'search_term': q
+                            });
+                        }
+                    }, 1000);
+                }
+
                 if (!q || !searchData) {
                     searchResults.classList.add('hidden');
                     searchResults.innerHTML = '';
