@@ -1,11 +1,26 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="he" dir="rtl" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>שירותבוט (SherutBot) | העוזר החכם לחקיקת השירות הלאומי-אזרחי</title>
-    <meta name="description" content="מאגר בינה מלאכותית וחיפוש סעיפים מהיר לכלל חקיקת השירות הלאומי-אזרחי, תקנותיו וחוזר מנכ&quot;ל הרשות.">
+    <meta name="description" content="שער הגישה החכם למחקר ושאילתות בינה מלאכותית על חוקי ותקנות השירות הלאומי-אזרחי וחוזר מנכ&quot;ל הרשות.">
     
+    <!-- FOUC Prevention & Early Theme Resolution -->
+    <script>
+      (function() {
+        try {
+          const savedTheme = localStorage.getItem('sherutbot_theme');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <!-- Google Fonts: Heebo -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,10 +38,11 @@
       });
     </script>
     
-    <!-- Tailwind CSS (via CDN) -->
+    <!-- Tailwind CSS (via CDN) with Dark Mode Support -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -36,11 +52,13 @@
                         brand: {
                             50: '#eff6ff',
                             100: '#dbeafe',
+                            200: '#bfdbfe',
                             500: '#3b82f6',
                             600: '#2563eb',
                             700: '#1d4ed8',
                             800: '#1e40af',
                             900: '#1e3a8a',
+                            950: '#0f172a',
                         }
                     }
                 }
@@ -49,139 +67,168 @@
     </script>
     
     <style>
-        .glass {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
         .skip-link {
             position: absolute;
-            top: -40px;
-            right: 0;
+            top: -50px;
+            right: 16px;
             background: #1e3a8a;
-            color: white;
-            padding: 8px 16px;
-            z-index: 100;
-            transition: top 0.2s;
+            color: #ffffff;
+            padding: 10px 18px;
+            border-radius: 0 0 8px 8px;
+            z-index: 1000;
+            font-weight: 700;
+            text-decoration: none;
+            transition: top 0.2s ease-in-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
         }
         .skip-link:focus {
             top: 0;
+            outline: 3px solid #60a5fa;
+            outline-offset: 2px;
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white transition-colors duration-200">
 
-    <!-- Accessibility Skip Link -->
+    <!-- Accessibility Skip Link (WCAG 2.4.1) -->
     <a href="#main-content" class="skip-link">דלג לתוכן המרכזי</a>
 
+    <!-- Accessible Notification Toast (aria-live) -->
+    <div id="toast-region" aria-live="polite" aria-atomic="true" class="fixed bottom-5 left-5 z-50 pointer-events-none">
+        <div id="copy-toast" class="opacity-0 translate-y-3 transition-all duration-300 pointer-events-auto bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-5 py-3 rounded-xl shadow-2xl text-sm font-semibold flex items-center gap-3 border border-slate-700 dark:border-slate-200">
+            <span aria-hidden="true" class="text-emerald-400 dark:text-emerald-600 text-lg">✓</span>
+            <span id="toast-message">השאלה הועתקה בהצלחה!</span>
+        </div>
+    </div>
+
     <!-- Top Header -->
-    <header class="sticky top-0 z-50 glass border-b border-slate-200">
+    <header class="sticky top-0 z-40 backdrop-blur-md bg-white/85 dark:bg-slate-900/85 border-b border-slate-200 dark:border-slate-800 transition-colors duration-200">
         <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-brand-900 text-white flex items-center justify-center font-bold text-xl shadow-md">
+                <div class="w-10 h-10 rounded-xl bg-brand-900 dark:bg-brand-600 text-white flex items-center justify-center font-bold text-xl shadow-md" aria-hidden="true">
                     🏛️
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg text-brand-900 leading-tight">שירותבוט</h1>
-                    <p class="text-xs text-slate-500 font-medium">העוזר החכם לחקיקת שירות לאומי-אזרחי</p>
+                    <h1 class="font-bold text-lg text-brand-900 dark:text-blue-400 leading-tight">שירותבוט</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">העוזר החכם לחקיקת שירות לאומי-אזרחי</p>
                 </div>
             </div>
 
-            <!-- Live Status Pill -->
-            <div id="live-status-pill" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold shadow-sm">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span id="status-text">מאגר מסונכרן ומאומת</span>
+            <!-- Controls (Live Status + Theme Toggle) -->
+            <div class="flex items-center gap-3">
+                <!-- Live Status Pill -->
+                <div id="live-status-pill" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-semibold shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true"></span>
+                    <span id="status-text">מאגר מסונכרן ומאומת</span>
+                </div>
+
+                <!-- Dark/Light Mode Toggle Button -->
+                <button id="theme-toggle" type="button"
+                        class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 outline-none transition-all"
+                        aria-label="החלף מצב תצוגה בין בהיר לכהה" title="החלף מצב תצוגה">
+                    <!-- Sun Icon (shown in dark mode) -->
+                    <svg id="theme-icon-sun" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/>
+                    </svg>
+                    <!-- Moon Icon (shown in light mode) -->
+                    <svg id="theme-icon-moon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+                    </svg>
+                </button>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main id="main-content" class="flex-grow max-w-6xl mx-auto px-4 py-8 w-full">
+    <!-- Main Content (WCAG Main Landmark) -->
+    <main id="main-content" class="flex-grow max-w-6xl mx-auto px-4 py-8 md:py-12 w-full">
 
         <!-- Hero Section -->
-        <section class="text-center py-8 md:py-12">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-brand-800 text-xs font-medium mb-4">
-                ✨ גרסה רשמית 4.2 – מסונכרנת שבועית מול נבו ו-gov.il
+        <section class="text-center py-6 md:py-12" aria-labelledby="hero-heading">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-brand-800 dark:text-blue-300 text-xs font-semibold mb-5">
+                <span aria-hidden="true">✨</span> גרסה רשמית 4.2 – מסונכרנת שבועית מול נבו ו-gov.il
             </div>
-            <h2 class="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
+            
+            <h2 id="hero-heading" class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-5 leading-tight">
                 כל חוקי ותקנות השירות הלאומי,<br>
-                <span class="text-brand-900">במענה בינה מלאכותית מדויק ומצוטט.</span>
+                <span class="text-brand-900 dark:text-blue-400">במענה בינה מלאכותית מדויק ומצוטט.</span>
             </h2>
-            <p class="text-base md:text-lg text-slate-600 max-w-2xl mx-auto mb-8 leading-relaxed">
-                מערכת אוטונומית המרכזת את 2 חוקי השירות, 6 התקנות וחוזר המנכ"ל העדכני. שאלו כל שאלה וקבלו הפניה ישירה לסעיף החוק הרלוונטי.
+            
+            <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mb-8 leading-relaxed">
+                מערכת אוטונומית המרכזת את 2 חוקי השירות, 6 התקנות וחוזר המנכ"ל העדכני. כל שאלה מקבלת מענה מקצועי עם הפניה ישירה ומדויקת לסעיף החוק הרלוונטי.
             </p>
 
-            <!-- Primary CTAs -->
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <a id="btn-open-notebook" href="https://notebook.google.com/notebook/fb1050f3-989b-434e-ba76-fa1347c0cdd5" target="_blank" rel="noopener noreferrer"
-                   class="w-full sm:w-auto px-8 py-4 rounded-xl bg-brand-900 hover:bg-brand-800 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-3">
-                    <span>💬 פתח את שירותבוט במחברת המחקר</span>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            <!-- Primary Direct Action CTA -->
+            <div class="flex flex-col items-center justify-center gap-3">
+                <a id="btn-open-notebook"
+                   href="https://notebook.google.com/notebook/fb1050f3-989b-434e-ba76-fa1347c0cdd5"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   aria-label="פתח את שירותבוט במחברת המחקר NotebookLM (נפתח בחלון חדש)"
+                   class="w-full sm:w-auto px-10 py-5 rounded-2xl bg-brand-900 hover:bg-brand-800 dark:bg-brand-600 dark:hover:bg-brand-500 text-white font-extrabold text-lg sm:text-xl shadow-xl hover:shadow-2xl transition-all duration-200 flex items-center justify-center gap-3 focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-2 outline-none">
+                    <span aria-hidden="true">💬</span>
+                    <span>כניסה למחברת שירותבוט ב-NotebookLM</span>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
                 </a>
-                <a href="#quick-search"
-                   class="w-full sm:w-auto px-6 py-4 rounded-xl bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 font-semibold text-base shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
-                    <span>🔍 חיפוש סעיפים מיידי בדף</span>
-                </a>
-            </div>
-            <p class="text-xs text-slate-600 mt-2">נדרש חשבון Google • ללא עלות • מגובה בציטוטים רשמיים</p>
-        </section>
-
-        <!-- Quick Instant Search Section -->
-        <section id="quick-search" class="my-8 bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200">
-            <div class="max-w-2xl mx-auto">
-                <h3 class="text-xl font-bold text-slate-900 mb-2 flex items-center gap-2">
-                    <span>🔍</span> חיפוש סעיפים והוראות מהיר (Client-Side Search)
-                </h3>
-                <p class="text-sm text-slate-500 mb-4">חפשו מונח (למשל: דמי כלכלה, קיזוז, חו\"ל, שעות שירות, ימי חופשה) לקבלת תמצית מיידית:</p>
-                
-                <div class="relative">
-                    <input type="text" id="search-input" placeholder="הקלד מילת חיפוש בחוקים ובתקנות..."
-                           class="w-full px-4 py-3.5 pr-11 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-base"
-                           aria-label="חיפוש סעיפים בחוקים">
-                    <span class="absolute right-3.5 top-3.5 text-slate-400">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    </span>
-                </div>
-
-                <!-- Search Results Box -->
-                <div id="search-results" class="mt-4 space-y-3 hidden">
-                    <!-- Populated dynamically via JS -->
-                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    נדרש חשבון Google • שירות פתוח ללא עלות • ציטוטים מלאים ומאומתים
+                </p>
             </div>
         </section>
 
-        <!-- 15 Golden Questions FAQ Section -->
-        <section class="my-10">
+        <!-- 15 Golden Questions Section -->
+        <section class="my-10 md:my-14" aria-labelledby="faq-heading">
             <div class="text-center mb-8">
-                <h3 class="text-2xl font-bold text-slate-900 mb-2">💡 15 שאלות הזהב הנפוצות ביותר</h3>
-                <p class="text-sm text-slate-500">תשובות מוסמכות לשאלות מפתח – לחצו להעתקת השאלה והמשך שיחה במחברת:</p>
+                <h3 id="faq-heading" class="text-2xl font-bold text-slate-900 dark:text-white mb-2 flex items-center justify-center gap-2">
+                    <span aria-hidden="true">💡</span> 15 שאלות לדוגמה שתוכלו לשאול במחברת
+                </h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400">
+                    לחצו על "העתק שאלה" כדי להעתיק את השאילתה המנוסחת ישירות לצ'אט ב-NotebookLM:
+                </p>
             </div>
 
             <div id="faq-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Populated dynamically from search_index.json -->
+                <!-- Populated dynamically via JS from search_index.json -->
             </div>
         </section>
 
-        <!-- Sources Overview Table -->
-        <section class="my-12 bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200">
-            <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <span>📚</span> מאגר החקיקה והחוזרין המנוטרים במערכת
-            </h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-right text-sm">
-                    <thead>
-                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
-                            <th class="py-3 px-4">מזהה</th>
-                            <th class="py-3 px-4">שם החוק / התקנה</th>
-                            <th class="py-3 px-4">נוסח נכון ליום</th>
-                            <th class="py-3 px-4">מקור רשמי</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sources-table-body" class="divide-y divide-slate-100">
-                        <!-- Populated via JS -->
-                    </tbody>
-                </table>
-            </div>
+        <!-- Collapsible Synced Sources List (WCAG Accordion) -->
+        <section class="my-10" aria-labelledby="sources-heading">
+            <details id="sources-details" class="group bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-all overflow-hidden">
+                <summary class="cursor-pointer list-none p-6 md:p-7 flex items-center justify-between font-bold text-lg text-slate-900 dark:text-white focus-visible:ring-2 focus-visible:ring-brand-500 outline-none select-none hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <span aria-hidden="true" class="text-xl">📚</span>
+                        <span id="sources-heading">רשימת 9 החוקים, התקנות וחוזר המנכ"ל המנוטרים במערכת</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs font-semibold text-brand-700 dark:text-blue-400 bg-brand-50 dark:bg-blue-950/80 px-3 py-1.5 rounded-full">
+                        <span class="group-open:hidden">לחצו להצגה</span>
+                        <span class="hidden group-open:inline">לחצו לסגירה</span>
+                        <svg class="w-4 h-4 transform group-open:rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+                </summary>
+
+                <div class="px-6 pb-6 pt-2 border-t border-slate-100 dark:border-slate-800 overflow-x-auto">
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                        כל המקורות הללו נסרקים ומתעדכנים שבועית באופן אוטונומי ממאגרי נבו ואתר הממשלה (gov.il):
+                    </p>
+                    <table class="w-full text-right text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold">
+                                <th scope="col" class="py-3 px-4">מזהה</th>
+                                <th scope="col" class="py-3 px-4">שם החוק / התקנה</th>
+                                <th scope="col" class="py-3 px-4">נוסח נכון ליום</th>
+                                <th scope="col" class="py-3 px-4">סטטוס סנכרון</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sources-table-body" class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </details>
         </section>
 
     </main>
@@ -193,43 +240,140 @@
                 <p class="font-bold text-white text-sm">שירותבוט (SherutBot) – מאגר ידע ובינה מלאכותית</p>
                 <p class="mt-1">המידע מבוסס על פרסומי נבו ורשות השירות הלאומי-אזרחי. אין לראות במידע ייעוץ משפטי מחייב.</p>
             </div>
-            <div class="flex items-center gap-6">
-                <a href="privacy.html" class="hover:text-white transition-colors">מדיניות פרטיות</a>
-                <a href="#main-content" class="hover:text-white transition-colors">לראש הדף ↑</a>
-            </div>
+            <nav class="flex items-center gap-6" aria-label="קישורים משניים בתחתית הדף">
+                <button type="button" onclick="openAccessibilityModal()" class="hover:text-white transition-colors underline focus-visible:ring-2 focus-visible:ring-white outline-none rounded">
+                    הצהרת נגישות (תקנה 35)
+                </button>
+                <a href="privacy.html" class="hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-white outline-none rounded">
+                    מדיניות פרטיות
+                </a>
+                <a href="#main-content" class="hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-white outline-none rounded">
+                    לראש הדף ↑
+                </a>
+            </nav>
         </div>
     </footer>
 
-    <!-- Client-Side Search & UI Script -->
-    <script>
-        let searchData = null;
+    <!-- Accessible Accessibility Statement Modal (ת"י 5568 / WCAG 2.2 AA) -->
+    <div id="accessibility-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-2xl max-w-xl w-full p-6 md:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 mb-4">
+                <h3 id="modal-title" class="text-xl font-bold flex items-center gap-2">
+                    <span aria-hidden="true">♿</span> הצהרת נגישות (תקן ישראלי 5568 / WCAG 2.2 AA)
+                </h3>
+                <button type="button" onclick="closeAccessibilityModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-2 rounded-lg focus-visible:ring-2 focus-visible:ring-brand-500 outline-none" aria-label="סגור הצהרת נגישות">
+                    ✕
+                </button>
+            </div>
+            <div class="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                <p>
+                    אתר <strong>שירותבוט</strong> הונגש בהתאם להוראות הדין הישראלי (תקנה 35 לתקנות שוויון זכויות לאנשים עם מוגבלות) ולפי הנחיות התקן הבינלאומי <strong>WCAG 2.2 ברמה AA</strong>.
+                </p>
+                <h4 class="font-bold text-slate-900 dark:text-white text-base">פעולות הנגישות שבוצעו באתר:</h4>
+                <ul class="list-disc list-inside space-y-1.5 pr-2">
+                    <li>קישור ישיר לדילוג לתוכן המרכזי (Skip Link) בראש הדף.</li>
+                    <li>תמיכה מלאה בניווט באמצעות מקלדת בלבד (Tab, Shift+Tab, Enter, Space).</li>
+                    <li>התאמה מלאה לקוראי מסך (Semantic HTML5, ARIA labels, aria-live).</li>
+                    <li>ניגודיות צבעים גבוהה (מעל 4.5:1) ועמידה בתקני צבע לטקסט ולכפתורים.</li>
+                    <li>תמיכה במצב תצוגה כהה (Dark Mode) ומצב בהיר (Light Mode).</li>
+                    <li>אפשרות להגדלת גופן וזום של עד 200% ללא פגיעה במבנה הדף.</li>
+                </ul>
+                <p class="text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200 dark:border-slate-800">
+                    אם נתקלתם בקושי כלשהו בנושא נגישות או שיש לכם הצעה לשיפור, נשמח לקבל פנייה דרך מאגר ה-GitHub של הפרויקט.
+                </p>
+            </div>
+            <div class="mt-6 text-left">
+                <button type="button" onclick="closeAccessibilityModal()" class="px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-sm focus-visible:ring-2 focus-visible:ring-brand-500 outline-none">
+                    סגור חלון
+                </button>
+            </div>
+        </div>
+    </div>
 
-        // 1. Fetch live status
+    <!-- UI Scripts (Theme Toggle, FAQs, GA4 Events, Accessible Modals) -->
+    <script>
+        // 1. Dark/Light Theme Controller
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const sunIcon = document.getElementById('theme-icon-sun');
+        const moonIcon = document.getElementById('theme-icon-moon');
+
+        function updateThemeIcons() {
+            const isDark = document.documentElement.classList.contains('dark');
+            if (isDark) {
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            } else {
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            }
+        }
+
+        function toggleTheme() {
+            const isCurrentlyDark = document.documentElement.classList.contains('dark');
+            if (isCurrentlyDark) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('sherutbot_theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('sherutbot_theme', 'dark');
+            }
+            updateThemeIcons();
+
+            if (typeof gtag === 'function') {
+                gtag('event', 'theme_change', {
+                    'theme': isCurrentlyDark ? 'light' : 'dark'
+                });
+            }
+        }
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', toggleTheme);
+            updateThemeIcons();
+        }
+
+        // 2. Fetch live status & render collapsible sources table
         fetch('status.json')
             .then(res => res.json())
             .then(data => {
                 if (data.last_updated) {
-                    document.getElementById('status-text').textContent = `מעודכן ליום ${data.last_updated} (${data.sources_count} מקורות)`;
+                    const statusText = document.getElementById('status-text');
+                    if (statusText) {
+                        statusText.textContent = `מעודכן ליום ${data.last_updated} (${data.sources_count} מקורות)`;
+                    }
                 }
                 const tbody = document.getElementById('sources-table-body');
                 if (tbody && data.sources) {
                     tbody.innerHTML = data.sources.map(s => `
-                        <tr class="hover:bg-slate-50">
-                            <td class="py-3 px-4 font-mono font-bold text-brand-900">${s.id}</td>
-                            <td class="py-3 px-4 font-medium text-slate-900">${s.title}</td>
-                            <td class="py-3 px-4 text-slate-600">${s.version_date || 'עדכני'}</td>
-                            <td class="py-3 px-4 text-emerald-600 font-semibold">מאומת ומסונכרן</td>
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            <td class="py-3 px-4 font-mono font-bold text-brand-900 dark:text-blue-400">${s.id}</td>
+                            <td class="py-3 px-4 font-medium text-slate-900 dark:text-slate-100">${s.title}</td>
+                            <td class="py-3 px-4 text-slate-600 dark:text-slate-400">${s.version_date || 'עדכני'}</td>
+                            <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block" aria-hidden="true"></span>
+                                <span>מאומת ומסונכרן</span>
+                            </td>
                         </tr>
                     `).join('');
                 }
             })
             .catch(() => {});
 
-        // 2. Fetch search index & FAQs
+        // 3. Track sources accordion opening in GA4
+        const sourcesDetails = document.getElementById('sources-details');
+        if (sourcesDetails) {
+            sourcesDetails.addEventListener('toggle', () => {
+                if (sourcesDetails.open && typeof gtag === 'function') {
+                    gtag('event', 'view_sources_list', {
+                        'event_category': 'engagement'
+                    });
+                }
+            });
+        }
+
+        // 4. Fetch search index & render 15 Golden Questions
         fetch('search_index.json')
             .then(res => res.json())
             .then(data => {
-                searchData = data;
                 renderFAQ(data.faq || []);
             })
             .catch(() => {});
@@ -238,25 +382,43 @@
             const container = document.getElementById('faq-container');
             if (!container) return;
             container.innerHTML = faqs.map((f, i) => `
-                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-brand-500 transition-all flex flex-col justify-between">
+                <article class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-brand-500 dark:hover:border-blue-500 transition-all flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">${f.category || 'כללי'}</span>
-                            <span class="text-xs text-slate-400 font-mono">#${f.id}</span>
+                            <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold">${f.category || 'כללי'}</span>
+                            <span class="text-xs text-slate-400 font-mono" aria-label="שאלה מספר ${f.id}">#${f.id}</span>
                         </div>
-                        <h4 class="font-bold text-slate-900 text-base mb-2">${f.question}</h4>
-                        <p class="text-sm text-slate-600 leading-relaxed mb-3">${f.answer}</p>
+                        <h4 class="font-bold text-slate-900 dark:text-white text-base mb-2 leading-snug">${f.question}</h4>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-3">${f.answer}</p>
                     </div>
-                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                         <span class="text-xs text-slate-400 truncate max-w-[200px]" title="${f.source}">מקור: ${f.source}</span>
-                        <button onclick="copyAndPrompt('${encodeURIComponent(f.question)}')"
-                                class="text-xs font-semibold text-brand-700 hover:text-brand-900 flex items-center gap-1 bg-brand-50 px-2.5 py-1 rounded-lg">
+                        <button type="button"
+                                onclick="copyAndPrompt('${encodeURIComponent(f.question)}')"
+                                aria-label="העתק שאלה זו להדבקה במחברת NotebookLM"
+                                class="text-xs font-semibold text-brand-700 dark:text-blue-300 hover:text-brand-900 dark:hover:text-blue-100 flex items-center gap-1.5 bg-brand-50 dark:bg-blue-950/80 hover:bg-brand-100 dark:hover:bg-blue-900 px-3 py-1.5 rounded-xl focus-visible:ring-2 focus-visible:ring-brand-500 outline-none transition-colors">
                             <span>העתק שאלה</span>
-                            📋
+                            <span aria-hidden="true">📋</span>
                         </button>
                     </div>
-                </div>
+                </article>
             `).join('');
+        }
+
+        // 5. Accessible Toast Announcement for Copy
+        let toastTimeout = null;
+        function showAccessibleToast(msg) {
+            const toast = document.getElementById('copy-toast');
+            const msgEl = document.getElementById('toast-message');
+            if (!toast || !msgEl) return;
+            msgEl.textContent = msg;
+            toast.classList.remove('opacity-0', 'translate-y-3');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-3');
+            }, 3500);
         }
 
         function copyAndPrompt(encodedQuestion) {
@@ -268,11 +430,13 @@
                         'event_label': question
                     });
                 }
-                alert(`השאלה הועתקה ללוח:\n"${question}"\n\nפתח/י את המחברת והדבק/י בצ'אט!`);
+                showAccessibleToast('השאלה הועתקה ללוח! עברו למחברת והדביקו אותה בצ\'אט.');
+            }).catch(() => {
+                showAccessibleToast('לא ניתן להעתיק אוטומטית. אנא העתיקו ידנית.');
             });
         }
 
-        // GA4 Track NotebookLM CTA Click
+        // 6. Track Hero NotebookLM Button Click
         const btnNotebook = document.getElementById('btn-open-notebook');
         if (btnNotebook) {
             btnNotebook.addEventListener('click', () => {
@@ -285,67 +449,28 @@
             });
         }
 
-        // Instant Client-Side Search with GA4 Tracking
-        const searchInput = document.getElementById('search-input');
-        const searchResults = document.getElementById('search-results');
-        let searchGaTimeout = null;
-
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
-                const q = e.target.value.trim().toLowerCase();
-
-                // Track search in GA4 with 1s debounce
-                clearTimeout(searchGaTimeout);
-                if (q.length >= 3) {
-                    searchGaTimeout = setTimeout(() => {
-                        if (typeof gtag === 'function') {
-                            gtag('event', 'search', {
-                                'search_term': q
-                            });
-                        }
-                    }, 1000);
-                }
-
-                if (!q || !searchData) {
-                    searchResults.classList.add('hidden');
-                    searchResults.innerHTML = '';
-                    return;
-                }
-
-                const matches = [];
-                // Search in FAQs
-                if (searchData.faq) {
-                    searchData.faq.forEach(f => {
-                        if (f.question.toLowerCase().includes(q) || f.answer.toLowerCase().includes(q)) {
-                            matches.push({ type: 'שאלה נפוצה', title: f.question, snippet: f.answer.substring(0, 160) + '...' });
-                        }
-                    });
-                }
-
-                // Search in Articles
-                if (searchData.articles) {
-                    searchData.articles.forEach(a => {
-                        if (a.title.toLowerCase().includes(q) || a.full_text.toLowerCase().includes(q)) {
-                            matches.push({ type: 'חוק/תקנה', title: a.title, snippet: a.summary });
-                        }
-                    });
-                }
-
-                if (matches.length > 0) {
-                    searchResults.classList.remove('hidden');
-                    searchResults.innerHTML = matches.slice(0, 4).map(m => `
-                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                            <span class="text-xs font-bold text-brand-800 bg-blue-100 px-2 py-0.5 rounded">${m.type}</span>
-                            <h5 class="font-bold text-slate-900 text-sm mt-1 mb-1">${m.title}</h5>
-                            <p class="text-xs text-slate-600 leading-relaxed">${m.snippet}</p>
-                        </div>
-                    `).join('');
-                } else {
-                    searchResults.classList.remove('hidden');
-                    searchResults.innerHTML = `<div class="p-4 text-center text-xs text-slate-500">לא נמצאו תוצאות ישירות. מומלץ לשאול ישירות במחברת ה-NotebookLM.</div>`;
-                }
-            });
+        // 7. Accessibility Modal Controls
+        function openAccessibilityModal() {
+            const modal = document.getElementById('accessibility-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
         }
+
+        function closeAccessibilityModal() {
+            const modal = document.getElementById('accessibility-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeAccessibilityModal();
+            }
+        });
     </script>
 </body>
 </html>
